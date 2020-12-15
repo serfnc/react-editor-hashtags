@@ -24,3 +24,36 @@ code {
   padding: 20px;
   border-radius: 3px;
 }
+
+.TagsMenu {
+  top: -9999px;
+  left: -9999px;
+  position: absolute;
+  z-index: 9999;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08);
+}
+
+.TagMenu {
+  color: #333;
+  display: block;
+  text-decoration: none;
+  padding: 5px 15px 5px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.TagElement {
+  padding: 0 5px 0;
+  margin: 0 1px;
+  vertical-align: baseline;
+  display: inline-block;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #333;
+  font-weight: 500;
+  font-size: 0.9em;
+  cursor: pointer;
+}

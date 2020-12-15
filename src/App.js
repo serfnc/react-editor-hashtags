@@ -1,74 +1,30 @@
-// Import React dependencies.
 import React, {useEffect, useMemo, useState, useCallback, useRef} from "react"
-
-// Import the Slate editor factory.
-import {createEditor, Editor, Point, Range, Transforms} from 'slate'
-
-// Import the Slate components and React plugin.
+import {createEditor, Editor, Point, Range, Transforms, Node, Text} from 'slate'
 import {Editable, ReactEditor, Slate, useEditor, useFocused, useReadOnly, useSelected, useSlate, withReact} from 'slate-react'
-
 import ReactDOM from 'react-dom'
+import escapeHtml from 'escape-html'
 
-// Styling
 import './App.css';
 
-const tagsList = [
-  'liver',
-  'pain',
-  'right',
-  'left',
-  'pancreas',
-  'kidney',
-  'brain',
-  'severe_pain',
-  'tumour',
-  'cancer',
-  'MRI',
-  'CT',
-  'male',
-  'female',
-  'bone',
-  'shoulder',
-  'hip',
-  'XRAY',
-  'knee',
-  'spine',
-  'head',
-  'abdomen',
-  'contrast',
-  'fragment',
-  'detached',
-  'injury',
-  'torn',
-  'rotator',
-  'cuff',
-  'abdominal',
-  'dilatation'
-]
+const tagsList = ['liver', 'pain', 'right', 'left', 'pancreas', 'kidney', 'brain', 'severe_pain', 'tumour', 'cancer', 'MRI', 'CT', 'male', 'female', 'bone', 'shoulder', 'hip', 'XRAY', 'knee', 'spine', 'head', 'abdomen', 'contrast', 'fragment', 'detached', 'injury', 'torn', 'rotator', 'cuff', 'abdominal', 'dilatation']
 
 const App = () => {
   const editor = useMemo(() => withTags(withReact(createEditor())), [])
-  
-  const [tagTarget, setTagTarget] = useState(null)
 
   const tagRef = useRef(null)
 
+  const [tagTarget, setTagTarget] = useState(null)
   const [index, setIndex] = useState(0)
   const [search, setSearch] = useState('')
-
-  // Add the initial value when setting up our state.
+  
   const [value, setValue] = useState([
     {
       type: 'paragraph',
       children: [{ text: 'A line of text in a paragraph.' }],
-    },
+    }
   ])
 
   const renderElement = useCallback(props => <Element {...props} />, [])
-
-  const tags = tagsList.filter(c =>
-    c.toLowerCase().startsWith(search.toLowerCase())
-  ).slice(0, 10)
 
   const onKeyDown = event => {
     if (tagTarget) {
@@ -97,7 +53,6 @@ const App = () => {
       }
     }
 }
-
   useEffect(() => {
     if (tagTarget) {
       const el = tagRef.current
@@ -109,6 +64,15 @@ const App = () => {
     }
   }, [index, tagTarget, search])
 
+
+  let tags = tagsList.filter(c =>
+    c.toLowerCase().startsWith(search.toLowerCase())
+  ).slice(0, 10)
+
+  if (tags && !tags.find(exactText => exactText.toLowerCase() == search.toLowerCase())) {
+    tags = [search].concat(tags)
+  }
+
   return (
     <div className="App">
       <div className="Card">
@@ -117,6 +81,11 @@ const App = () => {
           value={value}
           onChange={newValue => {
             setValue(newValue)
+
+            console.log('--------------------------')
+            console.log('Original value', newValue)
+            console.log('Text value', serializeText(newValue))
+            console.log('HTML value', newValue.map(n => serializeHtml(n)).join(''))
 
             const {selection} = editor
 
@@ -133,7 +102,6 @@ const App = () => {
               const afterMatch = afterText.match(/^(\s|$)/)
 
               if (beforeMatch && afterMatch) {
-                console.log(beforeRange)
                 setTagTarget(beforeRange)
                 setSearch(beforeMatch[1])
                 setIndex(0)
@@ -145,47 +113,22 @@ const App = () => {
             setTagTarget(null)
           }}
         >
-    
           <Editable
             renderElement={renderElement}
             onKeyDown={onKeyDown}
           />
 
           {tagTarget &&
-          <Portal>
-            <div
-              ref={tagRef}
-              style={{
-                top: '-9999px',
-                left: '-9999px',
-                position: 'absolute',
-                zIndex: 9999,
-                background: '#fff',
-                borderRadius: '3px',
-                boxShadow: '0 0 0 1px rgba(99, 114, 130, 0.16), 0 8px 16px rgba(27, 39, 51, 0.08)',
-              }}
-            >
-              {tags.map((tag, tagIndex) => (
-                <div
-                  key={tag}
-                  style={{
-                    color: "#333",
-                    display: 'block',
-                    textDecoration: 'none',
-                    padding: '5px 15px 5px 10px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    background: tagIndex === index ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
-                  }}
-                >
-                  #{tag}
-                </div>
-              ))}
-            </div>
-          </Portal>
+            <Portal>
+              <div ref={tagRef} className="TagsMenu">
+                {tags.map((tag, tagIndex) => (
+                  <div className="TagMenu" key={tag} style={{background: tagIndex === index ? 'rgba(0, 0, 0, 0.05)' : 'transparent'}} >
+                    #{tag}
+                  </div>
+                ))}
+              </div>
+            </Portal>
           }
-
         </Slate>
       </div>
     </div>
@@ -211,19 +154,10 @@ const TagElement = ({attributes, children, element}) => {
     <span
       {...attributes}
       contentEditable={false}
-      className={'tag'}
+      className={'TagElement'}
       style={{
-        padding: '0 5px 0',
-        margin: '0 1px',
-        verticalAlign: 'baseline',
-        display: 'inline-block',
-        borderRadius: '3px',
-        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-        color: "#333",
-        fontWeight: "500",
-        fontSize: '0.9em',
-        cursor: "pointer",
         boxShadow: selected && focused ? '0 0 0 2px rgba(0, 0, 0, 0.1)' : 'none',
+        backgroundColor: tagsList.includes(element.character) ? 'rgba(0, 0, 0, 0.05)' : '#d4f5ff'
       }}
     >
       #{element.character}
@@ -244,12 +178,11 @@ const insertTag = (editor, tagText) => {
     return false
   }
 
-  const tag = {
+  Transforms.insertNodes(editor, {
     type: 'tag',
     character: tagText,
-    children: [{text: '' }]
-  }
-  Transforms.insertNodes(editor, tag)
+    children: [{text: `#${tagText}`}]
+  })
   Transforms.move(editor)
   Transforms.insertText(editor, " ")
 }
@@ -267,5 +200,25 @@ const withTags = editor => {
 
   return editor
 }
+
+const serializeText = node => {
+  return node ? node.map(n => Node.string(n)).join('\n') : ''
+}
+
+const serializeHtml = node => {
+  if (Text.isText(node)) {
+    return escapeHtml(node.text)
+  }
+
+  const children = node && node.children ? node.children.map(n => serializeHtml(n)).join('') : []
+
+  switch (node.type) {
+    case 'tag':
+      return `<span>${children}</span>`
+    default:
+      return children
+  }
+}
+
 
 export default App;
