@@ -71,7 +71,6 @@ const App = () => {
   ).slice(0, 10)
 
   const onKeyDown = event => {
-    console.log('key down', tagTarget)
     if (tagTarget) {
       switch (event.key) {
         case 'ArrowDown':
@@ -152,6 +151,7 @@ const App = () => {
             onKeyDown={onKeyDown}
           />
 
+          {tagTarget &&
           <Portal>
             <div
               ref={tagRef}
@@ -184,6 +184,7 @@ const App = () => {
               ))}
             </div>
           </Portal>
+          }
 
         </Slate>
       </div>
@@ -210,7 +211,7 @@ const TagElement = ({attributes, children, element}) => {
     <span
       {...attributes}
       contentEditable={false}
-      className={'tag-element'}
+      className={'tag'}
       style={{
         padding: '0 5px 0',
         margin: '0 1px',
@@ -227,7 +228,7 @@ const TagElement = ({attributes, children, element}) => {
     >
       #{element.character}
 
-      {/* {children} */}
+      {children}
     </span>
   )
 
@@ -246,9 +247,9 @@ const insertTag = (editor, tagText) => {
   const tag = {
     type: 'tag',
     character: tagText,
-    children: [{text: ''}]
+    children: [{text: '' }]
   }
-  Transforms.insertNodes(editor, tagText)
+  Transforms.insertNodes(editor, tag)
   Transforms.move(editor)
   Transforms.insertText(editor, " ")
 }
